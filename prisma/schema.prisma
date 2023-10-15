@@ -1,0 +1,318 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model AccountType {
+  id          BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  user_id     BigInt    @db.UnsignedBigInt
+  name        String    @db.VarChar(255)
+  description String?   @db.Text
+  created_at  DateTime? @db.Timestamp(0)
+  updated_at  DateTime? @db.Timestamp(0)
+
+  @@map("account_types")
+}
+
+model Account {
+  id          BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  name        String    @db.VarChar(255)
+  details     Json?
+  user_id     BigInt?   @db.UnsignedBigInt
+  type_id     Int       @default(1) @db.UnsignedTinyInt
+  currency_id BigInt?   @db.UnsignedBigInt
+  created_at  DateTime? @db.Timestamp(0)
+  updated_at  DateTime? @db.Timestamp(0)
+
+  @@unique([name, user_id], map: "accounts_name_user_id_unique")
+  @@index([user_id], map: "accounts_user_id_foreign")
+  @@map("accounts")
+}
+
+model Audit {
+  id         BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  action     String   @db.VarChar(255)
+  user_id    BigInt   @db.UnsignedBigInt
+  table_name String   @db.VarChar(255)
+  before     Json?
+  after      Json?
+  ip         String?  @db.VarChar(45)
+  url        String?  @db.LongText
+  created_at DateTime @default(now()) @db.Timestamp(0)
+  updated_at DateTime @default(now()) @db.Timestamp(0)
+
+  @@index([action], map: "audits_action_index")
+  @@index([table_name], map: "audits_table_name_index")
+  @@index([user_id], map: "audits_user_id_index")
+  @@map("audits")
+}
+
+model BudgetCategory {
+  id          BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  budget_id   BigInt    @db.UnsignedBigInt
+  category_id BigInt    @db.UnsignedBigInt
+  created_at  DateTime? @db.Timestamp(0)
+  updated_at  DateTime? @db.Timestamp(0)
+
+  @@map("budget_categories")
+}
+
+model Budget {
+  id          BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  name        String    @db.VarChar(255)
+  description String?   @db.VarChar(255)
+  amount      Decimal   @db.Decimal(8, 2)
+  type        Int       @default(1) @db.UnsignedTinyInt
+  user_id     BigInt    @db.UnsignedBigInt
+  created_at  DateTime? @db.Timestamp(0)
+  updated_at  DateTime? @db.Timestamp(0)
+
+  @@map("budgets")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model Category {
+  id         BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  parent_id  BigInt?   @db.UnsignedBigInt
+  name       String    @db.VarChar(255)
+  user_id    BigInt?   @db.UnsignedBigInt
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+
+  @@unique([name, user_id], map: "categories_name_user_id_unique")
+  @@index([parent_id], map: "categories_parent_id_index")
+  @@index([user_id], map: "categories_user_id_foreign")
+  @@map("categories")
+}
+
+model Currency {
+  id   BigInt @id @default(autoincrement()) @db.UnsignedBigInt
+  slug String @unique(map: "currencies_slug_unique") @db.VarChar(255)
+  name String @db.VarChar(255)
+
+  @@map("currencies")
+}
+
+model CurrencyRate {
+  id               BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  from_currency_id BigInt    @db.UnsignedBigInt
+  to_currency_id   BigInt    @db.UnsignedBigInt
+  rate             String    @db.VarChar(255)
+  created_at       DateTime? @db.Timestamp(0)
+  updated_at       DateTime? @db.Timestamp(0)
+
+  @@unique([from_currency_id, to_currency_id], map: "currency_rates_from_currency_id_to_currency_id_unique")
+  @@map("currency_rates")
+}
+
+model failed_jobs {
+  id         BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  uuid       String   @unique(map: "failed_jobs_uuid_unique") @db.VarChar(255)
+  connection String   @db.Text
+  queue      String   @db.Text
+  payload    String   @db.LongText
+  exception  String   @db.LongText
+  failed_at  DateTime @default(now()) @db.Timestamp(0)
+}
+
+model jobs {
+  id           BigInt @id @default(autoincrement()) @db.UnsignedBigInt
+  queue        String @db.VarChar(255)
+  payload      String @db.LongText
+  attempts     Int    @db.UnsignedTinyInt
+  reserved_at  Int?   @db.UnsignedInt
+  available_at Int    @db.UnsignedInt
+  created_at   Int    @db.UnsignedInt
+
+  @@index([queue], map: "jobs_queue_index")
+}
+
+model migrations {
+  id        Int    @id @default(autoincrement()) @db.UnsignedInt
+  migration String @db.VarChar(255)
+  batch     Int
+}
+
+model model_has_permissions {
+  permission_id BigInt @db.UnsignedBigInt
+  model_type    String @db.VarChar(255)
+  model_id      BigInt @db.UnsignedBigInt
+
+  @@id([permission_id, model_id, model_type])
+  @@index([model_id, model_type], map: "model_has_permissions_model_id_model_type_index")
+}
+
+model model_has_roles {
+  role_id    BigInt @db.UnsignedBigInt
+  model_type String @db.VarChar(255)
+  model_id   BigInt @db.UnsignedBigInt
+
+  @@id([role_id, model_id, model_type])
+  @@index([model_id, model_type], map: "model_has_roles_model_id_model_type_index")
+}
+
+model Notification {
+  id              String    @id @db.Char(36)
+  type            String    @db.VarChar(255)
+  notifiable_type String    @db.VarChar(255)
+  notifiable_id   BigInt    @db.UnsignedBigInt
+  data            String    @db.Text
+  read_at         DateTime? @db.Timestamp(0)
+  created_at      DateTime? @db.Timestamp(0)
+  updated_at      DateTime? @db.Timestamp(0)
+
+  @@index([notifiable_type, notifiable_id], map: "notifications_notifiable_type_notifiable_id_index")
+  @@map("notifications")
+}
+
+model operations {
+  id           BigInt                @id @default(autoincrement()) @db.UnsignedBigInt
+  name         String                @db.VarChar(255)
+  dispatched   operations_dispatched
+  processed_at DateTime?             @db.Timestamp(0)
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model password_resets {
+  email      String    @db.VarChar(255)
+  token      String    @db.VarChar(255)
+  created_at DateTime? @db.Timestamp(0)
+
+  @@index([email], map: "password_resets_email_index")
+  @@ignore
+}
+
+model permissions {
+  id         BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  name       String    @db.VarChar(255)
+  guard_name String    @db.VarChar(255)
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+
+  @@unique([name, guard_name], map: "permissions_name_guard_name_unique")
+}
+
+model personal_access_tokens {
+  id             BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  tokenable_type String    @db.VarChar(255)
+  tokenable_id   BigInt    @db.UnsignedBigInt
+  name           String    @db.VarChar(255)
+  token          String    @unique(map: "personal_access_tokens_token_unique") @db.VarChar(64)
+  abilities      String?   @db.Text
+  last_used_at   DateTime? @db.Timestamp(0)
+  created_at     DateTime? @db.Timestamp(0)
+  updated_at     DateTime? @db.Timestamp(0)
+  expires_at     DateTime? @db.Timestamp(0)
+
+  @@index([tokenable_type, tokenable_id], map: "personal_access_tokens_tokenable_type_tokenable_id_index")
+}
+
+model role_has_permissions {
+  permission_id BigInt @db.UnsignedBigInt
+  role_id       BigInt @db.UnsignedBigInt
+
+  @@id([permission_id, role_id])
+  @@index([role_id], map: "role_has_permissions_role_id_foreign")
+}
+
+model roles {
+  id         BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  name       String    @db.VarChar(255)
+  guard_name String    @db.VarChar(255)
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+
+  @@unique([name, guard_name], map: "roles_name_guard_name_unique")
+}
+
+model Settings {
+  key        String    @id @db.VarChar(255)
+  value      Json?
+  name       String?   @db.VarChar(255)
+  type       Int       @default(2) @db.UnsignedTinyInt
+  user_id    BigInt?   @db.UnsignedBigInt
+  is_public  Int       @default(1) @db.UnsignedTinyInt
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+
+  @@index([user_id], map: "settings_user_id_index")
+  @@map("settings")
+}
+
+model TagTransaction {
+  id             BigInt @id @default(autoincrement()) @db.UnsignedBigInt
+  tag_id         BigInt @db.UnsignedBigInt
+  transaction_id BigInt @db.UnsignedBigInt
+
+  @@index([tag_id], map: "tag_transaction_tag_id_foreign")
+  @@index([transaction_id], map: "tag_transaction_transaction_id_foreign")
+  @@map("tag_transaction")
+}
+
+model Tag {
+  id         BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  name       String    @db.VarChar(255)
+  slug       String    @unique(map: "tags_slug_unique") @db.VarChar(255)
+  user_id    BigInt    @db.UnsignedBigInt
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+
+  @@index([user_id], map: "tags_user_id_foreign")
+  @@map("tags")
+}
+
+model Transaction {
+  id          BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  action      Int       @db.UnsignedTinyInt
+  action_type Int       @db.UnsignedTinyInt
+  amount      Decimal   @db.Decimal(8, 2)
+  description String?   @db.Text
+  batch_id    Int?      @db.UnsignedInt
+  user_id     BigInt?   @db.UnsignedBigInt
+  account_id  BigInt?   @db.UnsignedBigInt
+  category_id BigInt?   @db.UnsignedBigInt
+  is_public   Int       @default(1) @db.TinyInt
+  created_at  DateTime? @db.Timestamp(0)
+  updated_at  DateTime? @db.Timestamp(0)
+
+  @@index([account_id], map: "transactions_account_id_foreign")
+  @@index([category_id], map: "transactions_category_id_foreign")
+  @@index([user_id], map: "transactions_user_id_foreign")
+  @@map("transactions")
+}
+
+model UserOAuthProvider {
+  id               BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  user_id          BigInt    @db.UnsignedBigInt
+  provider         String    @db.VarChar(255)
+  provider_user_id String    @db.VarChar(255)
+  access_token     String?   @db.Text
+  refresh_token    String?   @db.Text
+  created_at       DateTime? @db.Timestamp(0)
+  updated_at       DateTime? @db.Timestamp(0)
+
+  @@index([provider_user_id], map: "user_o_auth_providers_provider_user_id_index")
+  @@map("user_o_auth_providers")
+}
+
+model User {
+  id             BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  name           String    @db.VarChar(255)
+  email          String?   @unique(map: "users_email_unique") @db.VarChar(255)
+  password       String?   @db.VarChar(255)
+  phone          String?   @db.VarChar(15)
+  remember_token String?   @db.VarChar(100)
+  created_at     DateTime? @db.Timestamp(0)
+  updated_at     DateTime? @db.Timestamp(0)
+
+  @@map("users")
+}
+
+enum operations_dispatched {
+  sync
+  async
+}

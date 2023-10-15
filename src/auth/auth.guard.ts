@@ -1,6 +1,10 @@
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from "@nestjs/common";
-import { Observable } from "rxjs";
-import { JwtService } from "@nestjs/jwt";
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -12,9 +16,9 @@ export class AuthGuard implements CanActivate {
     try {
       const token = this.getTokenFromRequest(request);
 
-      request["user"] = await this.parseToken(token);
+      request['user'] = await this.parseToken(token);
     } catch {
-      throw new UnauthorizedException;
+      throw new UnauthorizedException();
     }
 
     return true;
@@ -23,14 +27,14 @@ export class AuthGuard implements CanActivate {
   private getTokenFromRequest(request: Request): string | undefined {
     const headers = request.headers;
 
-    if (!headers["authorization"]) {
-      throw new UnauthorizedException;
+    if (!headers['authorization']) {
+      throw new UnauthorizedException();
     }
 
-    const [type, token] = headers["authorization"].split(" ") ?? [];
+    const [type, token] = headers['authorization'].split(' ') ?? [];
 
-    if (type !== "Bearer") {
-      throw new UnauthorizedException;
+    if (type !== 'Bearer') {
+      throw new UnauthorizedException();
     }
 
     return token;
@@ -39,10 +43,10 @@ export class AuthGuard implements CanActivate {
   private async parseToken(token: string) {
     try {
       return await this.jwtService.verifyAsync(token, {
-        secret: "SECRET"
+        secret: 'SECRET',
       });
     } catch {
-      throw new UnauthorizedException;
+      throw new UnauthorizedException();
     }
   }
 }
